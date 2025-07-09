@@ -109,10 +109,14 @@ Aero's mood (instantly write just one word from the list, no other text or expla
 
       return NextResponse.json({ mood: determinedMood });
 
-    } catch (apiError: any) {
+    } catch (apiError: unknown) {
       console.error("[MOOD API] Groq API Error:", apiError);
-      console.error("[MOOD API] Error details:", apiError.message);
-      console.error("[MOOD API] Error status:", apiError.status);
+      if (apiError instanceof Error) {
+        console.error("[MOOD API] Error details:", apiError.message);
+      }
+      if (apiError && typeof apiError === 'object' && 'status' in apiError) {
+        console.error("[MOOD API] Error status:", (apiError as { status: unknown }).status);
+      }
       
       // Fallback to neutral on API error
       return NextResponse.json({ mood: "neutral" });

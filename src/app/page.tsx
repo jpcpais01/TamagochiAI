@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import Pet from '@/components/Pet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SendHorizonal, Paperclip, X } from 'lucide-react';
+import Image from 'next/image';
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -47,7 +48,7 @@ export default function Home() {
       content: input,
       ...(imageUrl && { imageUrl }),
     };
-    
+
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
 
@@ -127,24 +128,10 @@ export default function Home() {
   };
 
   const triggerFileSelect = () => fileInputRef.current?.click();
-
-  // Initial autonomous message on page load
-  useEffect(() => {
-    const initialMessage = async () => {
-      if (messages.length === 0) {
-        // Wait a moment for the component to settle
-        setTimeout(() => {
-          generateSpontaneousMessage();
-        }, 2000);
-      }
-    };
-    initialMessage();
-  }, []); // Only run once on mount
-
-  const generateSpontaneousMessage = async () => {
+  
+  const generateSpontaneousMessage = useCallback(async () => {
     if (isLoading || isThinking) return;
     setIsThinking(true);
-    let finalResponse = '';
 
     try {
       const thinkResponse = await fetch('/api/think', {
@@ -160,17 +147,30 @@ export default function Home() {
         return;
       }
 
-              // Use the thought directly as Aero's spontaneous message
-        const spontaneousMessage: Message = { role: 'assistant', content: thought, isSpontaneous: true };
-        const finalMessages = [...messages, spontaneousMessage];
-        setMessages(finalMessages);
-        updateMood(finalMessages);
+      // Use the thought directly as Aero's spontaneous message
+      const spontaneousMessage: Message = { role: 'assistant', content: thought, isSpontaneous: true };
+      const finalMessages = [...messages, spontaneousMessage];
+      setMessages(finalMessages);
+      updateMood(finalMessages);
     } catch (error) {
       console.error('Spontaneous message failed:', error);
     } finally {
       setIsThinking(false);
     }
-  };
+  }, [isLoading, isThinking, messages, updateMood]);
+
+  // Initial autonomous message on page load
+  useEffect(() => {
+    const initialMessage = async () => {
+      if (messages.length === 0) {
+        // Wait a moment for the component to settle
+        setTimeout(() => {
+          generateSpontaneousMessage();
+        }, 2000);
+      }
+    };
+    initialMessage();
+  }, [generateSpontaneousMessage, messages.length]);
   
   useEffect(() => {
 
@@ -190,7 +190,7 @@ export default function Home() {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [messages, isLoading, isThinking, updateMood]);
+  }, [messages, isLoading, isThinking, updateMood, generateSpontaneousMessage]);
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -254,9 +254,11 @@ export default function Home() {
                           }`}
                       >
                         {m.imageUrl && (
-                          <img
+                          <Image
                             src={m.imageUrl}
                             alt="User upload"
+                            width={300}
+                            height={200}
                             className="rounded-lg mb-2 max-w-xs border border-white/10"
                           />
                         )}
@@ -321,9 +323,11 @@ export default function Home() {
             </div>
             {imageUrl && (
               <div className="mt-4 ml-2 relative w-28 h-28 group backdrop-blur-sm bg-black/20 p-1.5 rounded-xl border border-white/10">
-                <img
+                <Image
                   src={imageUrl}
                   alt="Image preview"
+                  width={112}
+                  height={112}
                   className="rounded-lg object-cover w-full h-full"
                 />
                 <Button

@@ -424,7 +424,7 @@ const Pet = ({ mood }: PetProps) => {
             opacity="0.6"
             animate={{ opacity: [0.4, 0.8] }}
             transition={{ duration: 2, repeat: Infinity, repeatType: "reverse", delay: 0.5 }}
-          />
+        />
         </motion.g>
 
         {/* Enhanced Antennae with Orbs */}

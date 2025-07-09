@@ -1,7 +1,5 @@
 import Groq from "groq-sdk";
-import { NextRequest, NextResponse } from "next/server";
 import { Message } from "../../../lib/types";
-import { Stream } from 'groq-sdk/lib/streaming';
 
 export const runtime = 'edge';
 
