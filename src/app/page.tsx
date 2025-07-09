@@ -19,6 +19,7 @@ export default function Home() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [timingMultiplier, setTimingMultiplier] = useState(1);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -51,6 +52,9 @@ export default function Home() {
 
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
+
+    // Reset timing multiplier when user sends a message
+    setTimingMultiplier(1);
 
     setInput('');
     setImageFile(null);
@@ -152,6 +156,9 @@ export default function Home() {
       const finalMessages = [...messages, spontaneousMessage];
       setMessages(finalMessages);
       updateMood(finalMessages);
+      
+      // Double the timing multiplier for next spontaneous message
+      setTimingMultiplier(prev => prev * 2);
     } catch (error) {
       console.error('Spontaneous message failed:', error);
     } finally {
@@ -181,7 +188,10 @@ export default function Home() {
 
     const setRandomTimeout = () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      const randomDelay = Math.random() * (30000 - 15000) + 15000;
+      // Progressive timing: 5-10 seconds base, doubled each time
+      const baseMin = 5000 * timingMultiplier;
+      const baseMax = 10000 * timingMultiplier;
+      const randomDelay = Math.random() * (baseMax - baseMin) + baseMin;
       timeoutRef.current = setTimeout(generateSpontaneousMessage, randomDelay);
     };
 
@@ -190,7 +200,7 @@ export default function Home() {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [messages, isLoading, isThinking, updateMood, generateSpontaneousMessage]);
+  }, [messages, isLoading, isThinking, updateMood, generateSpontaneousMessage, timingMultiplier]);
 
   useEffect(() => {
     if (chatContainerRef.current) {
